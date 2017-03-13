@@ -10,6 +10,7 @@ import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
@@ -77,6 +78,7 @@ public class DatadogBuildListener extends RunListener<Run>
   static final Integer HTTP_FORBIDDEN = 403;
   static final Integer MAX_HOSTNAME_LEN = 255;
   private static final Logger logger =  Logger.getLogger(DatadogBuildListener.class.getName());
+  private static final Queue queue = Queue.getInstance();
 
   /**
    * Runs when the {@link DatadogBuildListener} class is created.
@@ -97,6 +99,7 @@ public class DatadogBuildListener extends RunListener<Run>
     // Process only if job is NOT in blacklist
     if ( DatadogUtilities.isJobTracked(run.getParent().getFullDisplayName()) ) {
       logger.fine("Started build!");
+      Queue.Item item = queue.getItem(run.getQueueId());
 
       // Gather pre-build metadata
       JSONObject builddata = new JSONObject();
@@ -104,8 +107,18 @@ public class DatadogBuildListener extends RunListener<Run>
       builddata.put("number", run.number); // int
       builddata.put("result", null); // null
       builddata.put("duration", null); // null
+      builddata.put("waiting", (System.currentTimeMillis() - item.getInQueueSince()) / DatadogBuildListener.THOUSAND_LONG);
       long starttime = run.getStartTimeInMillis() / DatadogBuildListener.THOUSAND_LONG; // ms to s
       builddata.put("timestamp", starttime); // string
+
+      HashMap<String,String> extraTags = new HashMap<String, String>();
+      try {
+        extraTags = DatadogUtilities.parseTagList(run, listener);
+      } catch (IOException ex) {
+        logger.severe(ex.getMessage());
+      } catch (InterruptedException ex) {
+        logger.severe(ex.getMessage());
+      }
 
       // Grab environment variables
       try {
@@ -122,6 +135,7 @@ public class DatadogBuildListener extends RunListener<Run>
       BuildStartedEventImpl evt = new BuildStartedEventImpl(builddata, tags);
 
       DatadogHttpRequests.sendEvent(evt);
+      gauge("jenkins.job.waiting", builddata, "waiting", extraTags);
       logger.fine("Finished onStarted()");
     }
   }

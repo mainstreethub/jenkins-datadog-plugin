@@ -377,10 +377,11 @@ public class DatadogUtilities {
    * @return a JSONArray containing a specific subset of tags retrieved from a builds metadata.
    */
   public static JSONArray assembleTags(final JSONObject builddata, final HashMap<String,String> extra) {
+    DatadogBuildListener.DescriptorImpl descriptor = DatadogUtilities.getDatadogDescriptor();
     JSONArray tags = new JSONArray();
 
     tags.add("job:" + builddata.get("job"));
-    if ( (builddata.get("node") != null) && DatadogUtilities.getDatadogDescriptor().getTagNode() ) {
+    if ( (builddata.get("node") != null) && descriptor.getTagNode() != null && descriptor.getTagNode() ) {
       tags.add("node:" + builddata.get("node"));
     }
 
