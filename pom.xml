@@ -35,17 +35,55 @@
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:git://github.com/jenkinsci/datadog-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/datadog-plugin.git</developerConnection>
-    <url>http://github.com/jenkinsci/datadog-plugin</url>
-  </scm>
+  <!-- This configures the publication of jars to the S3 bucket by default. -->
+  <distributionManagement>
+    <repository>
+      <id>maven-s3-release-repo</id>
+      <name>S3 Release Repository</name>
+      <url>s3://artifacts.mainstreethub.com/maven/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>maven-s3-snapshot-repo</id>
+      <name>S3 Snapshot Repository</name>
+      <url>s3://artifacts.mainstreethub.com/maven/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <properties>
     <findbugs.skip>true</findbugs.skip>
   </properties>
 
+  <scm>
+    <connection>scm:git:git@github.com:mainstreethub/jenkins-datadog-plugin</connection>
+    <developerConnection>scm:git:git@github.com:mainstreethub/jenkins-datadog-plugin</developerConnection>
+    <url>https://github.com/mainstreethub/jenkins-datadog-plugin</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <!-- This configures the reading of jars from the S3 bucket. -->
   <repositories>
+    <repository>
+      <id>maven-s3-release-repo</id>
+      <name>S3 Release Repository</name>
+      <url>s3://artifacts.mainstreethub.com/maven/releases</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>maven-s3-snapshot-repo</id>
+      <name>S3 Release Repository</name>
+      <url>s3://artifacts.mainstreethub.com/maven/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
@@ -73,6 +111,15 @@
   </dependencies>
 
   <build>
+    <extensions>
+      <!-- Publish everything to S3 instead of a maven repo. -->
+      <extension>
+        <groupId>com.mainstreethub.build</groupId>
+        <artifactId>aws-maven</artifactId>
+        <version>5.0.0.RELEASE.MSH.1</version>
+      </extension>
+    </extensions>
+    
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
