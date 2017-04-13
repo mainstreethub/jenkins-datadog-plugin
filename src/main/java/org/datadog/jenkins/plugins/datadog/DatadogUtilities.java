@@ -170,6 +170,25 @@ public class DatadogUtilities {
   }
 
   /**
+   * Builds extraTags if any are configured in the Job.
+   *
+   * @param run - Current build
+   * @param listener - Current listener
+   * @return A {@link HashMap} containing the key,value pairs of tags if any.
+   */
+  public static HashMap<String,String> buildExtraTags(Run run, TaskListener listener) {
+    HashMap<String,String> extraTags = new HashMap<String, String>();
+    try {
+      extraTags = DatadogUtilities.parseTagList(run, listener);
+    } catch (IOException ex) {
+      logger.severe(ex.getMessage());
+    } catch (InterruptedException ex) {
+      logger.severe(ex.getMessage());
+    }
+    return extraTags;
+  }
+
+  /**
    *
    * @param r - Current build.
    * @return - The configured {@link DatadogJobProperty}. Null if not there
@@ -377,11 +396,10 @@ public class DatadogUtilities {
    * @return a JSONArray containing a specific subset of tags retrieved from a builds metadata.
    */
   public static JSONArray assembleTags(final JSONObject builddata, final HashMap<String,String> extra) {
-    DatadogBuildListener.DescriptorImpl descriptor = DatadogUtilities.getDatadogDescriptor();
     JSONArray tags = new JSONArray();
 
     tags.add("job:" + builddata.get("job"));
-    if ( (builddata.get("node") != null) && descriptor.getTagNode() != null && descriptor.getTagNode() ) {
+    if ( (builddata.get("node") != null) && DatadogUtilities.getDatadogDescriptor().getTagNode() ) {
       tags.add("node:" + builddata.get("node"));
     }
 
@@ -437,5 +455,4 @@ public class DatadogUtilities {
     String normalizedName = fullDisplayName.replaceAll("»", "/").replaceAll(" ", "");
     return normalizedName;
   }
-
 }

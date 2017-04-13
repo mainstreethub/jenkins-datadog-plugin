@@ -103,6 +103,7 @@ public class DatadogBuildListener extends RunListener<Run>
 
       // Gather pre-build metadata
       JSONObject builddata = new JSONObject();
+      HashMap<String,String> extraTags = DatadogUtilities.buildExtraTags(run, listener);
       builddata.put("job", DatadogUtilities.normalizeFullDisplayName(jobName)); // string
       builddata.put("number", run.number); // int
       builddata.put("result", null); // null
@@ -110,15 +111,6 @@ public class DatadogBuildListener extends RunListener<Run>
       builddata.put("waiting", (System.currentTimeMillis() - item.getInQueueSince()) / DatadogBuildListener.THOUSAND_LONG);
       long starttime = run.getStartTimeInMillis() / DatadogBuildListener.THOUSAND_LONG; // ms to s
       builddata.put("timestamp", starttime); // string
-
-      HashMap<String,String> extraTags = new HashMap<String, String>();
-      try {
-        extraTags = DatadogUtilities.parseTagList(run, listener);
-      } catch (IOException ex) {
-        logger.severe(ex.getMessage());
-      } catch (InterruptedException ex) {
-        logger.severe(ex.getMessage());
-      }
 
       // Grab environment variables
       try {
@@ -156,15 +148,7 @@ public class DatadogBuildListener extends RunListener<Run>
 
       // Collect Data
       JSONObject builddata = gatherBuildMetadata(run, listener);
-      HashMap<String,String> extraTags = new HashMap<String, String>();
-      try {
-        extraTags = DatadogUtilities.parseTagList(run, listener);
-      } catch (IOException ex) {
-        logger.severe(ex.getMessage());
-      } catch (InterruptedException ex) {
-        logger.severe(ex.getMessage());
-      }
-
+      HashMap<String,String> extraTags = DatadogUtilities.buildExtraTags(run, listener);
       JSONArray tagArr = DatadogUtilities.assembleTags(builddata, extraTags);
       DatadogEvent evt = new BuildFinishedEventImpl(builddata, extraTags);
       DatadogHttpRequests.sendEvent(evt);
