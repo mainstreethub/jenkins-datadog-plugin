@@ -52,13 +52,6 @@
     <findbugs.skip>true</findbugs.skip>
   </properties>
 
-  <scm>
-    <connection>scm:git:git@github.com:mainstreethub/jenkins-datadog-plugin</connection>
-    <developerConnection>scm:git:git@github.com:mainstreethub/jenkins-datadog-plugin</developerConnection>
-    <url>https://github.com/mainstreethub/jenkins-datadog-plugin</url>
-    <tag>HEAD</tag>
-  </scm>
-
   <!-- This configures the reading of jars from the S3 bucket. -->
   <repositories>
     <repository>
